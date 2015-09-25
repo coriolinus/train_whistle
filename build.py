@@ -81,7 +81,7 @@ def makezip(name, destpath=None):
 		
 	path = os.path.join(destpath, name + '.zip')
 	failed = None
-	with file(path, 'w') as fp:
+	with file(path, 'wb') as fp:
 		with ZipFile(fp, 'w', compression=ZIP_DEFLATED) as zip:
 			for dirpath, dirnames, filenames in os.walk('.'):
 				# don't add .git to the packed archive
@@ -115,9 +115,17 @@ def makezip(name, destpath=None):
 					# actually add the item to the archive
 					zip.write(filepath)
 	
+	if failed is None:
+		with file(path, 'rb') as fp:
+			with ZipFile(fp, 'r') as zip:
+				failed = zip.testzip()
+	
 	if failed is not None:
 		# we had a catastrophic error and don't want to leave a partial file hanging around
 		os.remove(path)
+		print >> sys.stderr, "Failed to write", path
+	else:
+		print "Successfully wrote and tested", path
 
 if __name__ == '__main__':
 	import argparse
