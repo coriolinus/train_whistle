@@ -97,15 +97,13 @@ def makezip(name, destpath=None):
 				for fn in filenames:
 					filepath = os.path.join(dirpath, fn)
 					# documentation here: http://www.factorioforums.com/wiki/index.php?title=Modding_overview
-					# lies about required structure. It says it must be in a folder inside the zip file, but
-					# that causes an error on game load.
 					
-					# zippath  = os.path.join(name, filepath)
+					zippath  = os.path.join(name, filepath)
 
 					try:
 						# zipfile requires that file names be encoded in cp437. 
 						filepath = codecs.encode(filepath, 'cp437') 
-						# zippath = codecs.encode(zippath, 'cp437') 
+						zippath = codecs.encode(zippath, 'cp437') 
 					except ValueError, e:
 						print >> sys.stderr, "Failed to encode", name
 						print >> sys.stderr, e
@@ -113,7 +111,7 @@ def makezip(name, destpath=None):
 						break;
 						
 					# actually add the item to the archive
-					zip.write(filepath)
+					zip.write(filepath, zippath)
 	
 	if failed is None:
 		with file(path, 'rb') as fp:
