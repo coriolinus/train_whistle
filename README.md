@@ -18,5 +18,6 @@ time, it lets loose a long blast.
 # Acknowledgements
 
 Train whistle sounds from <http://www.freesfx.co.uk>. Specifically, using 
-**Amtrak passenger train whistle blow (exterior) long* and 
-**Amtrak passenger train whistle blow (exterior)** filed in <http://www.freesfx.co.uk/soundeffects/trains/>.
+**Amtrak passenger train whistle blow (exterior) long** and 
+**Amtrak passenger train whistle blow (exterior)** filed in 
+<http://www.freesfx.co.uk/soundeffects/trains/>.
