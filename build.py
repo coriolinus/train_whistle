@@ -120,10 +120,12 @@ def makezip(name, destpath):
 					dirnames.remove('.git')
 				# don't add .gitignore to the packed archive
 				# also don't add the current zipfile, if we happen to be working in the CWD
-				ignorefiles = ['.gitignore', name + '.zip']
-				for ifn in ignorefiles:
-					if ifn in filenames:
-						filenames.remove(ifn)
+				ignorefiles = ['.gitignore', '*.zip']
+				for pattern in ignorefiles:
+					for match in glob(pattern):
+						if ifn in match:
+							match.remove(ifn)
+				
 				
 				for fn in filenames:
 					filepath = os.path.join(dirpath, fn)
