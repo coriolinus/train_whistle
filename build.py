@@ -123,8 +123,8 @@ def makezip(name, destpath):
 				ignorefiles = ['.gitignore', '*.zip']
 				for pattern in ignorefiles:
 					for match in glob(pattern):
-						if ifn in match:
-							match.remove(ifn)
+						if match in filenames:
+							filenames.remove(ifn)
 				
 				
 				for fn in filenames:
