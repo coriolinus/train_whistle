@@ -28,24 +28,20 @@ function whistle_long()
   }
 end
 
+--[[
 game.on_event(defines.events.on_init, function(event)
 	-- TODO
 	-- Load trains table from global[]
 end)
+--]]
 
-game.on_event(defines.events.ontick, function(event)
+game.on_event(defines.events.on_tick, function(event)
 	if game.player.character then
 		-- we have a real character, not a ghost etc
 		if game.player.character.vehicle and game.player.character.vehicle.name == "diesel-locomotive" then
 			-- if we're in a train, don't bother computing the rest of it
 			do return end
 		end
-		
-		-- find the nearby locomotives and act on them
-		local everything = game.findentities{{game.player.character.position.x-5,
-		                                      game.player.character.position.y-5},
-		                                      {game.player.character.position.x+5,
-		                                      game.player.character.position.y+5}}
 		-- TODO: continue here!
 	end
 end)
