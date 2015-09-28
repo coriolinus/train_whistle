@@ -4,9 +4,14 @@ Build the current project as a Factorio mod.
 Not required, but handy for work on the mod. The basic process is this:
 
  1. If the git status isn't clean, throw the current stuff into the stash
- 2. Get the current version from info.json for the zip name
- 3. Zip the current working directory into name_version.zip, in the containing directory
+ 2. Get the current name and version from info.json for the zip name
+ 3. Find the appropriate output directory
+ 4. Delete old versions of the output
+ 3. Zip the current working directory into name_version.zip, in the appropriate directory
  4. Unstash to restore the directory status. 
+ 
+Note: this utility assumes you're using `git`, and builds only what's committed in HEAD. You can't
+build what you haven't committed!
 """
 
 import subprocess
@@ -15,6 +20,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import os
 import codecs
 import sys
+from glob import glob
 
 def git_is_clean():
 	"""
@@ -42,11 +48,12 @@ def stash():
 	return need_unstash
 	
 def unstash():
-	subprocess.check_call(['git', 'stash', 'apply'])
+	subprocess.check_call(['git', 'stash', 'pop'])
 	
-def form_name(fn='info.json'):
-	with file(fn, 'r') as fp:
-		info = json.load(fp)
+def form_name(info=None):
+	if info is None:
+		with file('info.json', 'r') as fp:
+			info = json.load(fp)
 	return '_'.join([info['name'], info['version']])
 	
 def get_default_path():
@@ -68,7 +75,33 @@ def get_default_path():
 		ret = '.'
 	return os.path.expanduser(os.path.expandvars(ret))
 		
+def remove_other_versions(path=None, info=None):
+	"""\
+	Remove any other output files from the target directory.
 	
+	A typical run of this utility will simply overwrite the output zipfile already present. However,
+	when the version number changes, a new zipfile will be produced. In the typical case that the
+	output is written directoy to the Factorio mods directory, that will cause an error due to 
+	conflicting mod versions being present simultaneously. To fix that, we automatically remove 
+	old versions from the target directory.
+	
+	Note: this assumes that the only change between versions is the version number. If the name 
+	changes, this *will not* automatically remove the versions with the old name. On the other hand,
+	in that case Factorio won't complain about duplicate mods, so it's fine.
+	
+	This behavior can be suppressed using the `--keep-old-versions` flag.
+	"""
+	if info is None:
+		with file('info.json', 'r') as fp:
+			info = json.load(fp)
+	obsolete = info['name'] + '*.zip'
+	
+	rmglob = os.path.join(path, obsolete)
+	matches = glob(rmglob)
+	for match in matches:
+		os.remove(match)
+	
+		
 def makezip(name, destpath=None):
 	if destpath is None:
 		destpath = get_default_path()
@@ -126,6 +159,17 @@ def makezip(name, destpath=None):
 		print "Successfully wrote and tested", path
 
 if __name__ == '__main__':
+	# ensure info.json exists and is a valid json file; this utility depends on it
+	if not (os.path.exists('info.json') and os.path.isfile('info.json')):
+		print >> sys.stderr, "This utility requires info.json to exist in the current directory"
+		sys.exit(1)
+	with file('info.json', 'r') as fp:
+		try:
+			info = json.load(fp)
+		except ValueError:
+			print >> sys.stderr, "Could not decode info.json. Please ensure it is readable and a valid json file."
+			sys.exit(1)
+
 	import argparse
 	
 	desc = __doc__.strip()
@@ -134,18 +178,28 @@ if __name__ == '__main__':
 	
 	parser.add_argument('-o', '--output-directory', metavar="OD", dest='od',
 	                    help="specify a directory in which to place the output zip")
-	parser.add_argument('-.', '--output-here', action='store_const', dest='od', const='.',
-	                    help="store the output in the current dir. Same as '--output-directory .'")
+	parser.add_argument('-.', '--output-here', action='store_true', dest='local', default=False,
+	                    help="store the output in the current dir without deletion. Same as '--output-directory --keep-old-versions.'")
 	parser.add_argument('-d', '--detect-directory', action='store_true', default=False,
 	                    help="show the detected mods directory on this machine and exit")
+	parser.add_argument('-k', '--keep-old-versions', action='store_false', default=True, dest='delete',
+	                    help="do not automatically delete old output from the target directory")
 	
 	args = parser.parse_args()
+	
+	# -. implies two things: set the destination directory to the current dir, and don't remove old versions.
+	# argparse doesn't natively support implication, so we handle it here.
+	if args.local:
+		args.od = '.'
+		args.delete = False
 	
 	if args.detect_directory:
 		print get_default_path()
 		sys.exit(0)
 	
 	stashed = stash()
+	if args.delete:
+		remove_other_versions()
 	makezip(form_name(), args.od)
 	if stashed:
 		unstash()
