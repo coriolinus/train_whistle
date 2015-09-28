@@ -124,7 +124,7 @@ def makezip(name, destpath):
 				for pattern in ignorefiles:
 					for match in glob(pattern):
 						if match in filenames:
-							filenames.remove(ifn)
+							filenames.remove(match)
 				
 				
 				for fn in filenames:
