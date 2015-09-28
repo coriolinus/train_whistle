@@ -28,12 +28,12 @@ function whistle_long()
   }
 end
 
-game.onevent(defines.events.on_init, function(event)
+game.on_event(defines.events.on_init, function(event)
 	-- TODO
 	-- Load trains table from global[]
 end)
 
-game.onevent(defines.events.ontick, function(event)
+game.on_event(defines.events.ontick, function(event)
 	if game.player.character then
 		-- we have a real character, not a ghost etc
 		if game.player.character.vehicle and game.player.character.vehicle.name == "diesel-locomotive" then
