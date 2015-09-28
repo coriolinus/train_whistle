@@ -1,5 +1,6 @@
 require "util"
 require "defines"
+require "tfc"
 
 function whistle_short()
   return {
@@ -27,6 +28,11 @@ function whistle_long()
   }
 end
 
+game.onevent(defines.events.on_init, function(event)
+	-- TODO
+	-- Load trains table from global[]
+end)
+
 game.onevent(defines.events.ontick, function(event)
 	if game.player.character then
 		-- we have a real character, not a ghost etc
@@ -38,8 +44,8 @@ game.onevent(defines.events.ontick, function(event)
 		-- find the nearby locomotives and act on them
 		local everything = game.findentities{{game.player.character.position.x-5,
 		                                      game.player.character.position.y-5},
-                                             {game.player.character.position.x+5,
-						                      game.player.character.position.y+5}}
+		                                      {game.player.character.position.x+5,
+		                                      game.player.character.position.y+5}}
 		-- TODO: continue here!
 	end
 end)
