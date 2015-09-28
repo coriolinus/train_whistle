@@ -1,2 +1,8 @@
+# sound files for the mod, and any other large blobs
 resources/
-train_whistle_*.zip
+
+# output
+train_whistle*.zip
+
+# python
+*.pyc
