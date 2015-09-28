@@ -50,10 +50,7 @@ def stash():
 def unstash():
 	subprocess.check_call(['git', 'stash', 'pop'])
 	
-def form_name(info=None):
-	if info is None:
-		with file('info.json', 'r') as fp:
-			info = json.load(fp)
+def form_name(info):
 	return '_'.join([info['name'], info['version']])
 	
 def get_default_path():
@@ -75,7 +72,7 @@ def get_default_path():
 		ret = '.'
 	return os.path.expanduser(os.path.expandvars(ret))
 		
-def remove_other_versions(path=None, info=None):
+def remove_other_versions(path, info):
 	"""\
 	Remove any other output files from the target directory.
 	
@@ -91,27 +88,28 @@ def remove_other_versions(path=None, info=None):
 	
 	This behavior can be suppressed using the `--keep-old-versions` flag.
 	"""
-	if info is None:
-		with file('info.json', 'r') as fp:
-			info = json.load(fp)
 	obsolete = info['name'] + '*.zip'
-	
 	rmglob = os.path.join(path, obsolete)
 	matches = glob(rmglob)
 	for match in matches:
 		os.remove(match)
-	
-		
-def makezip(name, destpath=None):
+
+def get_destination_path(destpath):
+	"""\
+	Converts the destination path to a form which is guaranteed not to be None, nonexistent, or not 
+	a directory. If None is passed in, returns the default path for this system. If the path is 
+	nonexistent or not a directory, returns a ValueError.
+	"""
 	if destpath is None:
 		destpath = get_default_path()
 	if not os.path.exists(destpath):
-		print >> sys.stderr, "'{}' does not exist. Can't write data there!".format(destpath)
-		return
+		raise ValueError("'{}' does not exist. Can't write data there!".format(destpath))
 	elif not os.path.isdir(destpath):
-		print >> sys.stderr, "'{}' is not a directory. Can't write data there!".format(destpath)
-		return
+		raise ValueError("'{}' is not a directory. Can't write data there!".format(destpath))
+	return destpath
 		
+		
+def makezip(name, destpath):
 	path = os.path.join(destpath, name + '.zip')
 	failed = None
 	with file(path, 'wb') as fp:
@@ -198,8 +196,19 @@ if __name__ == '__main__':
 		sys.exit(0)
 	
 	stashed = stash()
+	
+	try:
+		path = get_destination_path(args.od)
+	except ValueError:
+		path = '.'
+		args.delete = False
+		print >> sys.stderr, "{} doesn't exist or is not a directory; falling through to '.'".format(args.od)
+		print >> sys.stderr, "Turning off auto-delete functionality so as not to clobber anything."
+	
 	if args.delete:
-		remove_other_versions()
-	makezip(form_name(), args.od)
+		remove_other_versions(path, info)
+		
+	makezip(form_name(info), path)
+	
 	if stashed:
 		unstash()
