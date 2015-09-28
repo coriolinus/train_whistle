@@ -3,6 +3,7 @@ resources/
 
 # output
 train_whistle*.zip
+train-whistle*.zip
 
 # python
 *.pyc
